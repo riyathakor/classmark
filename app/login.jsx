@@ -44,7 +44,7 @@ export default function Login() {
     >
       <View className="flex-1 justify-center pr-6 pl-6">
         <View className="mb-8">
-          <Text className="mb-1 text-3xl font-bold text-cyan-700 text-center">ClassMark</Text>
+          <Text className="mb-1 text-4xl font-bold text-cyan-700 text-center">ClassMark</Text>
           <Text className="mb-8 text-base text-muted text-center">
             Attendance made simple for your classes
           </Text>
@@ -73,7 +73,7 @@ export default function Login() {
           className="mb-6 flex-row items-center"
         >
           <View
-            className={`mr-2 h-5 w-5 items-center justify-center rounded border ${rememberMe ? 'border-primary bg-primary' : 'border-border bg-white'
+            className={`mr-2 h-5 w-5 items-center justify-center rounded border ${rememberMe ? 'border-cyan-600 bg-cyan-600' : 'border-border bg-white'
               }`}
           >
             {rememberMe ? <Text className="text-xs text-white">✓</Text> : null}
