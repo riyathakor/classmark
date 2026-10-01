@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { View, Text, SafeAreaView, FlatList, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { router } from 'expo-router';
 import { useClasses } from '../../src/context/ClassContext';
 import ClassFormModal from '../../src/components/ClassFormModal';
 import Button from '../../src/components/Button';
@@ -32,7 +33,10 @@ export default function Classes() {
 
   function renderCard({ item }) {
     return (
-      <View className="mb-3 flex-row items-center justify-between rounded-xl border border-border bg-card p-4">
+      <Pressable
+        onPress={() => router.push(`/class/${item.id}`)}
+        className="mb-3 flex-row items-center justify-between rounded-xl border border-border bg-card p-4"
+      >
         <View className="flex-1">
           <Text className="text-base font-semibold text-text">{item.name}</Text>
           <Text className={`mt-1 text-xs ${item.isActive ? 'text-success' : 'text-muted'}`}>
@@ -52,7 +56,7 @@ export default function Classes() {
             />
           </Pressable>
         </View>
-      </View>
+      </Pressable>
     );
   }
 

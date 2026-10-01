@@ -4,6 +4,7 @@ export const colors = {
   primary: '#2563eb',
   primaryLight: '#3b82f6',
   primaryDark: '#1e40af',
+  cyan: '#06b6d4',
   surface: '#f8fafc',
   card: '#ffffff',
   border: '#e2e8f0',

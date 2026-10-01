@@ -7,7 +7,7 @@ export default function TabsLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: colors.primary,
+        tabBarActiveTintColor: colors.cyan,
         tabBarInactiveTintColor: colors.muted,
         tabBarStyle: {
           height: 70,          // increase overall bar height (default is ~49-60)

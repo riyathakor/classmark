@@ -4,8 +4,8 @@ import { STORAGE_KEYS } from './storageKeys';
 // The single hardcoded teacher account. On first launch this gets written
 // to AsyncStorage so that change-password can update it for real afterwards.
 const DEFAULT_TEACHER = {
-  name: 'Riya',
-  email: 'riya@classmark.app',
+  name: 'Krunal Thakor',
+  email: 'krunal@classmark.app',
   password: 'classmark123', // change this after first login!
   profilePicture: null,
   designation: 'Table Tennis Coach',
