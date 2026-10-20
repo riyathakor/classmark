@@ -4,7 +4,7 @@ import { useRouter } from 'expo-router';
 import { useEventListener } from 'expo';
 import { VideoView, useVideoPlayer } from 'expo-video';
 
-const logoVideo = require('../assets/KrunalLogo.mp4');
+const logoVideo = require('../assets/videos/splash.mp4');
 
 export default function SplashScreen() {
     const router = useRouter();

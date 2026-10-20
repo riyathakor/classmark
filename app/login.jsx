@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Image } from 'react-native';
 import { View, Text, Pressable, Alert, KeyboardAvoidingView, Platform } from 'react-native';
 import { router } from 'expo-router';
 import { useAuth } from '../src/context/AuthContext';
@@ -44,10 +45,20 @@ export default function Login() {
     >
       <View className="flex-1 justify-center pr-6 pl-6">
         <View className="mb-8">
-          <Text className="mb-1 text-4xl font-bold text-cyan-700 text-center">ClassMark</Text>
+          {/* <Text className="mb-1 text-4xl font-bold text-cyan-700 text-center">ClassMark</Text>
           <Text className="mb-8 text-base text-muted text-center">
             Attendance made simple for your classes
-          </Text>
+          </Text> */}
+          <Image
+            source={require('../assets/logo.png')}
+            style={{
+              width: 140,
+              height: 140,
+              alignSelf: 'center',
+              resizeMode: 'contain',
+              marginBottom: 20,
+            }}
+          />
         </View>
         <Input
           label="Email"
@@ -73,7 +84,7 @@ export default function Login() {
           className="mb-6 flex-row items-center"
         >
           <View
-            className={`mr-2 h-5 w-5 items-center justify-center rounded border ${rememberMe ? 'border-cyan-600 bg-cyan-600' : 'border-border bg-white'
+            className={`mr-2 h-5 w-5 items-center justify-center rounded border ${rememberMe ? 'border-blue-600 bg-blue-600' : 'border-border bg-white'
               }`}
           >
             {rememberMe ? <Text className="text-xs text-white">✓</Text> : null}
@@ -84,7 +95,7 @@ export default function Login() {
         <Button label="Log In" onPress={handleLogin} loading={loading} />
 
         <Pressable onPress={handleForgotPassword} className="mt-4 items-center">
-          <Text className="text-sm text-cyan-600 underline">Forgot password?</Text>
+          <Text className="text-sm text-[#2C394D] underline">Forgot password?</Text>
         </Pressable>
       </View>
     </KeyboardAvoidingView>

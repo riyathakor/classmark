@@ -24,7 +24,7 @@ export default function Button({
   }[size];
 
   const variantClasses = {
-    primary: 'bg-cyan-600 active:bg-cyan-800',
+    primary: 'bg-[#2C394D] active:bg-[#2E3E58]',
     secondary: 'bg-white border border-border active:bg-surface',
     danger: 'bg-danger active:bg-red-700',
     ghost: 'bg-transparent',
@@ -47,12 +47,11 @@ export default function Button({
     <Pressable
       onPress={onPress}
       disabled={disabled || loading}
-      className={`${base} ${sizeClasses} ${variantClasses} ${fullWidth ? 'w-full' : ''} ${
-        disabled || loading ? 'opacity-50' : ''
-      }`}
+      className={`${base} ${sizeClasses} ${variantClasses} ${fullWidth ? 'w-full' : ''} ${disabled || loading ? 'opacity-50' : ''
+        }`}
     >
       {loading ? (
-        <ActivityIndicator color={variant === 'primary' || variant === 'danger' ? '#fff' : '#2563eb'} />
+        <ActivityIndicator color={variant === 'primary' || variant === 'danger' ? '#fff' : '#2C394D'} />
       ) : (
         <Text className={`${textClasses} ${textSize}`}>{label}</Text>
       )}
