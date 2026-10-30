@@ -22,7 +22,7 @@ async function getNextRollNumber(classId) {
   return Math.max(...classStudents.map((s) => s.rollNumber)) + 1;
 }
 
-export async function addStudent(classId, name) {
+export async function addStudent(classId, name, monthlyFee) {
   const all = await getAllStudents();
   const rollNumber = await getNextRollNumber(classId);
   const newStudent = {
@@ -30,16 +30,18 @@ export async function addStudent(classId, name) {
     classId,
     name: name.trim(),
     rollNumber,
+    monthlyFee,
     createdAt: new Date().toISOString(),
   };
-  const updated = [...all, newStudent];
-  await setItem(STORAGE_KEYS.STUDENTS, updated);
+  await setItem(STORAGE_KEYS.STUDENTS, [...all, newStudent]);
   return newStudent;
 }
 
-export async function updateStudentName(id, name) {
+export async function updateStudent(id, name, monthlyFee) {
   const all = await getAllStudents();
-  const updated = all.map((s) => (s.id === id ? { ...s, name: name.trim() } : s));
+  const updated = all.map((s) =>
+    s.id === id ? { ...s, name: name.trim(), monthlyFee } : s
+  );
   await setItem(STORAGE_KEYS.STUDENTS, updated);
   return updated;
 }

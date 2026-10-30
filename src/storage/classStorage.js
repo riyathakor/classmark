@@ -17,12 +17,11 @@ export async function addClass(name) {
         isActive: true,
         createdAt: new Date().toISOString(),
     };
-    const updated = [...classes, newClass];
-    await setItem(STORAGE_KEYS.CLASSES, updated);
+    await setItem(STORAGE_KEYS.CLASSES, [...classes, newClass]);
     return newClass;
 }
 
-export async function updateClassName(id, name) {
+export async function updateClass(id, name) {
     const classes = await getClasses();
     const updated = classes.map((c) => (c.id === id ? { ...c, name: name.trim() } : c));
     await setItem(STORAGE_KEYS.CLASSES, updated);

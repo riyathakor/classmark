@@ -1,18 +1,18 @@
 import { useEffect, useState } from 'react';
-import { Modal, View, Text, Pressable, KeyboardAvoidingView, Platform } from 'react-native';
+import { Modal, View, Text, KeyboardAvoidingView, Platform } from 'react-native';
 import Input from './Input';
 import Button from './Button';
 
-export default function ClassFormModal({ visible, onClose, onSubmit, initialName = '' }) {
-    const [name, setName] = useState(initialName);
+export default function ClassFormModal({ visible, onClose, onSubmit, classItem = null }) {
+    const [name, setName] = useState('');
     const [error, setError] = useState('');
 
     useEffect(() => {
         if (visible) {
-            setName(initialName);
+            setName(classItem?.name || '');
             setError('');
         }
-    }, [visible, initialName]);
+    }, [visible, classItem]);
 
     function handleSubmit() {
         if (!name.trim()) {
@@ -22,7 +22,7 @@ export default function ClassFormModal({ visible, onClose, onSubmit, initialName
         onSubmit(name.trim());
     }
 
-    const isEditMode = !!initialName;
+    const isEditMode = !!classItem;
 
     return (
         <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>

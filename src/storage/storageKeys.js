@@ -5,4 +5,5 @@ export const STORAGE_KEYS = {
   CLASSES: 'classmark:classes',
   STUDENTS: 'classmark:students',
   ATTENDANCE: 'classmark:attendance',
+  PAYMENTS: 'classmark:payments',
 };

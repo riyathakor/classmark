@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { View, Text, SafeAreaView, FlatList, Pressable } from 'react-native';
+import { View, Text, FlatList, Pressable } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useClasses } from '../../src/context/ClassContext';
@@ -8,7 +9,7 @@ import Button from '../../src/components/Button';
 import { colors } from '../../src/theme/colors';
 
 export default function Classes() {
-  const { classes, isLoading, addClass, updateClassName, toggleClassActive } = useClasses();
+  const { classes, isLoading, addClass, updateClass, toggleClassActive } = useClasses();
   const [modalVisible, setModalVisible] = useState(false);
   const [editingClass, setEditingClass] = useState(null); // null = add mode
 
@@ -24,7 +25,7 @@ export default function Classes() {
 
   async function handleSubmit(name) {
     if (editingClass) {
-      await updateClassName(editingClass.id, name);
+      await updateClass(editingClass.id, name);
     } else {
       await addClass(name);
     }
@@ -61,8 +62,8 @@ export default function Classes() {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-surface">
-      <View className="flex-1 px-6 pt-4">
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.surface }}>
+      <View className="flex-1 px-6 pt-8">
         <View className="mb-4 flex-row items-center justify-between">
           <Text className="text-2xl font-bold text-text">Classes</Text>
         </View>
@@ -91,7 +92,7 @@ export default function Classes() {
         visible={modalVisible}
         onClose={() => setModalVisible(false)}
         onSubmit={handleSubmit}
-        initialName={editingClass?.name || ''}
+        classItem={editingClass}
       />
     </SafeAreaView>
   );

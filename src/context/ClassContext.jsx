@@ -34,8 +34,8 @@ export function ClassProvider({ children }) {
     await refresh();
   }
 
-  async function updateClassName(id, name) {
-    await classStorage.updateClassName(id, name);
+  async function updateClass(id, name) {
+    await classStorage.updateClass(id, name);
     await refresh();
   }
 
@@ -46,7 +46,7 @@ export function ClassProvider({ children }) {
 
   return (
     <ClassContext.Provider
-      value={{ ...state, addClass, updateClassName, toggleClassActive, refresh }}
+      value={{ ...state, addClass, updateClass, toggleClassActive, refresh }}
     >
       {children}
     </ClassContext.Provider>

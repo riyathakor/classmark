@@ -1,4 +1,3 @@
-
 import '../global.css';
 import { useEffect, useState, useCallback } from 'react';
 import { View } from 'react-native';
@@ -10,6 +9,7 @@ import { AuthProvider } from '../src/context/AuthContext';
 import { ClassProvider } from '../src/context/ClassContext';
 import { StudentProvider } from '../src/context/StudentContext';
 import { AttendanceProvider } from '../src/context/AttendanceContext';
+import { PaymentProvider } from '../src/context/PaymentContext';
 import VideoSplash from '../src/components/VideoSplash';
 
 SplashScreen.preventAutoHideAsync();
@@ -30,21 +30,21 @@ export default function RootLayout() {
       <ClassProvider>
         <StudentProvider>
           <AttendanceProvider>
-            <View style={{ flex: 1 }}>
-              <StatusBar style="dark" />
+            <PaymentProvider>
+              <View style={{ flex: 1 }}>
+                <StatusBar style="dark" />
 
-              <Stack screenOptions={{ headerShown: false }}>
-                <Stack.Screen name="index" />
-                <Stack.Screen name="login" />
-                <Stack.Screen name="(tabs)" />
-                <Stack.Screen name="class/[id]" />
-                <Stack.Screen name="attendance/[classId]" />
-              </Stack>
+                <Stack screenOptions={{ headerShown: false }}>
+                  <Stack.Screen name="index" />
+                  <Stack.Screen name="login" />
+                  <Stack.Screen name="(tabs)" />
+                  <Stack.Screen name="class/[id]" />
+                  <Stack.Screen name="attendance/[classId]" />
+                </Stack>
 
-              {showSplash && (
-                <VideoSplash onFinish={finishSplash} />
-              )}
-            </View>
+                {showSplash && <VideoSplash onFinish={finishSplash} />}
+              </View>
+            </PaymentProvider>
           </AttendanceProvider>
         </StudentProvider>
       </ClassProvider>

@@ -29,13 +29,13 @@ export function StudentProvider({ children }) {
     refresh();
   }, []);
 
-  async function addStudent(classId, name) {
-    await studentStorage.addStudent(classId, name);
+  async function addStudent(classId, name, monthlyFee) {
+    await studentStorage.addStudent(classId, name, monthlyFee);
     await refresh();
   }
 
-  async function updateStudentName(id, name) {
-    await studentStorage.updateStudentName(id, name);
+  async function updateStudent(id, name, monthlyFee) {
+    await studentStorage.updateStudent(id, name, monthlyFee);
     await refresh();
   }
 
@@ -52,7 +52,7 @@ export function StudentProvider({ children }) {
 
   return (
     <StudentContext.Provider
-      value={{ ...state, addStudent, updateStudentName, removeStudent, getStudentsByClass, refresh }}
+      value={{ ...state, addStudent, updateStudent, removeStudent, getStudentsByClass, refresh }}
     >
       {children}
     </StudentContext.Provider>

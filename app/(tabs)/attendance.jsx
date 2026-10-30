@@ -1,6 +1,8 @@
-import { View, Text, SafeAreaView, FlatList, Pressable } from 'react-native';
+import { View, Text, FlatList, Pressable } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { useClasses } from '../../src/context/ClassContext';
+import { colors } from '../../src/theme/colors';
 
 export default function Attendance() {
   const { classes, isLoading } = useClasses();
@@ -19,7 +21,7 @@ export default function Attendance() {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-surface">
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.surface }}>
       <View className="flex-1 px-6 pt-4">
         <Text className="mb-4 text-2xl font-bold text-text">Attendance</Text>
 

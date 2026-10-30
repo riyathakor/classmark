@@ -7,11 +7,12 @@ import { useStudents } from '../../src/context/StudentContext';
 import StudentFormModal from '../../src/components/StudentFormModal';
 import Button from '../../src/components/Button';
 import { colors } from '../../src/theme/colors';
+import { formatMoney, getStudentFee } from '../../src/utils/fees';
 
 export default function ClassDetail() {
   const { id } = useLocalSearchParams();
   const { classes } = useClasses();
-  const { getStudentsByClass, addStudent, updateStudentName, removeStudent } = useStudents();
+  const { getStudentsByClass, addStudent, updateStudent, removeStudent } = useStudents();
 
   const [modalVisible, setModalVisible] = useState(false);
   const [editingStudent, setEditingStudent] = useState(null);
@@ -29,11 +30,11 @@ export default function ClassDetail() {
     setModalVisible(true);
   }
 
-  async function handleSubmit(name) {
+  async function handleSubmit(name, monthlyFee) {
     if (editingStudent) {
-      await updateStudentName(editingStudent.id, name);
+      await updateStudent(editingStudent.id, name, monthlyFee);
     } else {
-      await addStudent(id, name);
+      await addStudent(id, name, monthlyFee);
     }
     setModalVisible(false);
   }
@@ -56,7 +57,10 @@ export default function ClassDetail() {
           <View className="h-9 w-9 items-center justify-center rounded-full bg-surface">
             <Text className="text-xs font-semibold text-muted">{item.rollNumber}</Text>
           </View>
-          <Text className="text-base font-medium text-text">{item.name}</Text>
+          <View className="flex-1">
+            <Text className="text-base font-medium text-text">{item.name}</Text>
+            <Text className="text-xs text-muted">{formatMoney(getStudentFee(item))} / month</Text>
+          </View>
         </View>
 
         <View className="flex-row items-center gap-4">

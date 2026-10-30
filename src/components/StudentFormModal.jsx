@@ -2,24 +2,37 @@ import { useEffect, useState } from 'react';
 import { Modal, View, Text, KeyboardAvoidingView, Platform } from 'react-native';
 import Input from './Input';
 import Button from './Button';
+import { getStudentFee } from '../utils/fees';
 
 export default function StudentFormModal({ visible, onClose, onSubmit, student = null }) {
   const [name, setName] = useState('');
-  const [error, setError] = useState('');
+  const [fee, setFee] = useState('');
+  const [errors, setErrors] = useState({});
 
   useEffect(() => {
     if (visible) {
       setName(student?.name || '');
-      setError('');
+      // Students saved before fees existed show an empty field until a fee is entered.
+      const existingFee = student ? getStudentFee(student) : 0;
+      setFee(student && existingFee > 0 ? String(existingFee) : '');
+      setErrors({});
     }
   }, [visible, student]);
 
   function handleSubmit() {
-    if (!name.trim()) {
-      setError('Student name is required');
+    const next = {};
+    if (!name.trim()) next.name = 'Student name is required';
+
+    const feeNumber = Number(fee);
+    if (fee.trim() === '' || Number.isNaN(feeNumber) || feeNumber < 0) {
+      next.fee = 'Enter a valid monthly fee';
+    }
+
+    if (Object.keys(next).length > 0) {
+      setErrors(next);
       return;
     }
-    onSubmit(name.trim());
+    onSubmit(name.trim(), feeNumber);
   }
 
   const isEditMode = !!student;
@@ -44,7 +57,16 @@ export default function StudentFormModal({ visible, onClose, onSubmit, student =
             value={name}
             onChangeText={setName}
             placeholder="e.g. Aarav Shah"
-            error={error}
+            error={errors.name}
+          />
+
+          <Input
+            label="Monthly fee"
+            value={fee}
+            onChangeText={setFee}
+            placeholder="e.g. 1500"
+            keyboardType="numeric"
+            error={errors.fee}
           />
 
           <View className="mt-2 flex-row gap-3">
