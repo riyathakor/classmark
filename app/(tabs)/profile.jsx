@@ -6,6 +6,9 @@ import { useAuth } from '../../src/context/AuthContext';
 import { changePassword } from '../../src/storage/teacherStorage';
 import Input from '../../src/components/Input';
 import Button from '../../src/components/Button';
+import SectionTitle from '../../src/components/SectionTitle';
+import { colors } from '../../src/theme/colors';
+import { cardStyle, CHIP, screenTitleStyle, screenSubtitleStyle } from '../../src/theme/ui';
 
 export default function Profile() {
   const { teacher, logout } = useAuth();
@@ -14,6 +17,8 @@ export default function Profile() {
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  const initial = (teacher?.name || '').charAt(0).toUpperCase();
 
   async function handleLogout() {
     await logout();
@@ -40,35 +45,91 @@ export default function Profile() {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-surface">
-      <ScrollView contentContainerStyle={{ padding: 24 }}>
-        <Text className="mb-4 text-2xl font-bold text-text">Profile</Text>
+    <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: colors.surface }}>
+      <ScrollView
+        contentContainerStyle={{ paddingHorizontal: 24, paddingTop: 36, paddingBottom: 32 }}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
+        <Text style={screenTitleStyle}>Profile</Text>
+        <Text style={screenSubtitleStyle}>Your account and security</Text>
 
-        <View className="mb-6 rounded-xl border border-border bg-card p-4">
-          <Text className="text-lg font-semibold text-text">{teacher?.name}</Text>
-          <Text className="text-sm text-muted">{teacher?.email}</Text>
-          <Text className="mt-1 text-sm text-muted">{teacher?.designation}</Text>
-          {/* Profile picture + edit-info fields will be added in a later stage */}
+        {/* Profile card */}
+        <View
+          style={[
+            cardStyle,
+            { flexDirection: 'row', alignItems: 'center', padding: 18, marginTop: 24 },
+          ]}
+        >
+          <View
+            style={{
+              width: 64,
+              height: 64,
+              borderRadius: 32,
+              backgroundColor: CHIP,
+              alignItems: 'center',
+              justifyContent: 'center',
+              marginRight: 16,
+            }}
+          >
+            <Text style={{ fontSize: 26, fontWeight: '700', color: colors.text }}>{initial}</Text>
+          </View>
+
+          <View style={{ flex: 1 }}>
+            <Text style={{ fontSize: 20, fontWeight: '700', color: colors.text }}>
+              {teacher?.name}
+            </Text>
+            <Text style={{ fontSize: 14, marginTop: 2, color: colors.muted }}>{teacher?.email}</Text>
+            {teacher?.designation ? (
+              <View
+                style={{
+                  alignSelf: 'flex-start',
+                  marginTop: 8,
+                  paddingHorizontal: 10,
+                  paddingVertical: 4,
+                  borderRadius: 10,
+                  backgroundColor: CHIP,
+                }}
+              >
+                <Text style={{ fontSize: 12, fontWeight: '600', color: colors.text }}>
+                  {teacher.designation}
+                </Text>
+              </View>
+            ) : null}
+          </View>
         </View>
 
-        <Text className="mb-2 text-base font-semibold text-text">Change Password</Text>
-        <Input
-          label="Current password"
-          value={oldPassword}
-          onChangeText={setOldPassword}
-          secureTextEntry
-        />
-        <Input
-          label="New password"
-          value={newPassword}
-          onChangeText={setNewPassword}
-          secureTextEntry
-        />
-        {error ? <Text className="mb-2 text-sm text-danger">{error}</Text> : null}
-        {message ? <Text className="mb-2 text-sm text-success">{message}</Text> : null}
-        <Button label="Update Password" onPress={handleChangePassword} loading={loading} variant="secondary" />
+        {/* Change password */}
+        <SectionTitle>Change Password</SectionTitle>
+        <View style={[cardStyle, { padding: 18, paddingBottom: 18 }]}>
+          <Input
+            label="Current password"
+            value={oldPassword}
+            onChangeText={setOldPassword}
+            secureTextEntry
+          />
+          <Input
+            label="New password"
+            value={newPassword}
+            onChangeText={setNewPassword}
+            secureTextEntry
+          />
+          {error ? (
+            <Text style={{ fontSize: 14, marginBottom: 10, color: colors.danger }}>{error}</Text>
+          ) : null}
+          {message ? (
+            <Text style={{ fontSize: 14, marginBottom: 10, color: colors.success }}>{message}</Text>
+          ) : null}
+          <Button
+            label="Update Password"
+            onPress={handleChangePassword}
+            loading={loading}
+            variant="secondary"
+          />
+        </View>
 
-        <View className="mt-8">
+        {/* Log out */}
+        <View style={{ marginTop: 28 }}>
           <Button
             label="Log Out"
             onPress={() =>

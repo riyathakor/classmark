@@ -11,7 +11,12 @@ const initialState = {
 function reducer(state, action) {
   switch (action.type) {
     case 'SET_CLASSES':
-      return { ...state, isLoading: false, classes: action.classes };
+      return {
+        ...state,
+        isLoading: false,
+        classes: action.classes,
+      };
+
     default:
       return state;
   }
@@ -44,9 +49,22 @@ export function ClassProvider({ children }) {
     await refresh();
   }
 
+  // Delete class
+  async function deleteClass(id) {
+    await classStorage.deleteClass(id);
+    await refresh();
+  }
+
   return (
     <ClassContext.Provider
-      value={{ ...state, addClass, updateClass, toggleClassActive, refresh }}
+      value={{
+        ...state,
+        addClass,
+        updateClass,
+        toggleClassActive,
+        deleteClass,
+        refresh,
+      }}
     >
       {children}
     </ClassContext.Provider>
@@ -55,6 +73,10 @@ export function ClassProvider({ children }) {
 
 export function useClasses() {
   const ctx = useContext(ClassContext);
-  if (!ctx) throw new Error('useClasses must be used within ClassProvider');
+
+  if (!ctx) {
+    throw new Error('useClasses must be used within ClassProvider');
+  }
+
   return ctx;
 }

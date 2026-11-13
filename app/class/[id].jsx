@@ -1,24 +1,30 @@
 import { useState } from 'react';
-import { View, Text, SafeAreaView, FlatList, Pressable, Alert } from 'react-native';
+import { View, Text, FlatList, Pressable, Alert } from 'react-native';
 import { useLocalSearchParams, router, Stack } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useClasses } from '../../src/context/ClassContext';
 import { useStudents } from '../../src/context/StudentContext';
+import { usePayments } from '../../src/context/PaymentContext';
 import StudentFormModal from '../../src/components/StudentFormModal';
 import Button from '../../src/components/Button';
 import { colors } from '../../src/theme/colors';
-import { formatMoney, getStudentFee } from '../../src/utils/fees';
+import { cardStyle, CHIP } from '../../src/theme/ui';
+import { formatMoney, getStudentFee, currentMonthKey } from '../../src/utils/fees';
 
 export default function ClassDetail() {
   const { id } = useLocalSearchParams();
   const { classes } = useClasses();
   const { getStudentsByClass, addStudent, updateStudent, removeStudent } = useStudents();
+  const { getPayment } = usePayments();
+  const insets = useSafeAreaInsets();
 
   const [modalVisible, setModalVisible] = useState(false);
   const [editingStudent, setEditingStudent] = useState(null);
 
   const classItem = classes.find((c) => c.id === id);
   const students = getStudentsByClass(id);
+  const month = currentMonthKey();
 
   function openAddModal() {
     setEditingStudent(null);
@@ -51,24 +57,99 @@ export default function ClassDetail() {
   }
 
   function renderCard({ item }) {
+    const paid = !!getPayment(item.id, month);
+
     return (
-      <View className="mb-3 flex-row items-center justify-between rounded-xl border border-border bg-card p-4">
-        <View className="flex-1 flex-row items-center gap-3">
-          <View className="h-9 w-9 items-center justify-center rounded-full bg-surface">
-            <Text className="text-xs font-semibold text-muted">{item.rollNumber}</Text>
+      <View
+        style={[
+          cardStyle,
+          {
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            padding: 14,
+            marginBottom: 12,
+          },
+        ]}
+      >
+        <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', paddingRight: 8 }}>
+          <View
+            style={{
+              width: 38,
+              height: 38,
+              borderRadius: 19,
+              backgroundColor: CHIP,
+              alignItems: 'center',
+              justifyContent: 'center',
+              marginRight: 12,
+            }}
+          >
+            <Text style={{ fontSize: 14, fontWeight: '700', color: colors.text }}>
+              {item.rollNumber}
+            </Text>
           </View>
-          <View className="flex-1">
-            <Text className="text-base font-medium text-text">{item.name}</Text>
-            <Text className="text-xs text-muted">{formatMoney(getStudentFee(item))} / month</Text>
+
+          <View style={{ flex: 1 }}>
+            <Text
+              numberOfLines={1}
+              style={{ fontSize: 16, fontWeight: '700', color: colors.text }}
+            >
+              {item.name}
+            </Text>
+            <Text style={{ fontSize: 13, marginTop: 2, color: colors.muted }}>
+              {formatMoney(getStudentFee(item))} / month
+            </Text>
+            <View
+              style={{
+                alignSelf: 'flex-start',
+                marginTop: 6,
+                paddingHorizontal: 9,
+                paddingVertical: 3,
+                borderRadius: 10,
+                backgroundColor: paid ? 'rgba(31, 160, 82, 0.12)' : 'rgba(217, 54, 54, 0.10)',
+              }}
+            >
+              <Text
+                style={{
+                  fontSize: 11,
+                  fontWeight: '600',
+                  color: paid ? colors.success : colors.danger,
+                }}
+              >
+                {paid ? 'Paid this month' : 'Unpaid this month'}
+              </Text>
+            </View>
           </View>
         </View>
 
-        <View className="flex-row items-center gap-4">
-          <Pressable onPress={() => openEditModal(item)} hitSlop={8}>
-            <Ionicons name="create-outline" size={22} color={colors.primary} />
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+          <Pressable
+            onPress={() => openEditModal(item)}
+            hitSlop={6}
+            style={{
+              width: 36,
+              height: 36,
+              borderRadius: 18,
+              backgroundColor: CHIP,
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <Ionicons name="create-outline" size={18} color={colors.text} />
           </Pressable>
-          <Pressable onPress={() => handleRemove(item)} hitSlop={8}>
-            <Ionicons name="trash-outline" size={22} color={colors.danger} />
+          <Pressable
+            onPress={() => handleRemove(item)}
+            hitSlop={6}
+            style={{
+              width: 36,
+              height: 36,
+              borderRadius: 18,
+              backgroundColor: 'rgba(217, 54, 54, 0.10)',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <Ionicons name="trash-outline" size={18} color={colors.danger} />
           </Pressable>
         </View>
       </View>
@@ -76,27 +157,63 @@ export default function ClassDetail() {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-surface">
+    <View style={{ flex: 1, backgroundColor: colors.surface }}>
       <Stack.Screen
         options={{
           headerShown: true,
           title: classItem?.name || 'Class',
+          headerShadowVisible: false,
+          headerStyle: { backgroundColor: colors.surface },
+          headerTitleStyle: { fontSize: 18, fontWeight: '700', color: colors.text },
           headerLeft: () => (
-            <Pressable onPress={() => router.back()} hitSlop={8} className="mr-2">
-              <Ionicons name="chevron-back" size={24} color={colors.text} />
+            <Pressable
+              onPress={() => router.back()}
+              hitSlop={8}
+              style={{
+                width: 36,
+                height: 36,
+                borderRadius: 18,
+                backgroundColor: CHIP,
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginRight: 8,
+              }}
+            >
+              <Ionicons name="chevron-back" size={20} color={colors.text} />
             </Pressable>
           ),
         }}
       />
 
-      <View className="flex-1 px-6 pt-4">
-        <View className="mb-4">
-          <Button label="+ Add Student" onPress={openAddModal} />
-        </View>
+      <View style={{ flex: 1, paddingHorizontal: 24, paddingTop: 12 }}>
+        <Button label="+ Add Student" onPress={openAddModal} />
+
+        <Pressable
+          onPress={() => router.push(`/fees/${id}`)}
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'center',
+            height: 42,
+            borderRadius: 21,
+            backgroundColor: CHIP,
+            marginTop: 12,
+            marginBottom: 16,
+          }}
+        >
+          <Ionicons name="wallet" size={18} color={colors.text} />
+          <Text style={{ marginLeft: 8, fontSize: 15, fontWeight: '700', color: colors.text }}>
+            Collect Fees
+          </Text>
+        </Pressable>
+
+        <Text style={{ fontSize: 13, color: colors.muted, marginBottom: 12 }}>
+          {students.length} {students.length === 1 ? 'student' : 'students'}
+        </Text>
 
         {students.length === 0 ? (
-          <View className="mt-10 items-center">
-            <Text className="text-base text-muted">
+          <View style={[cardStyle, { padding: 24, alignItems: 'center' }]}>
+            <Text style={{ fontSize: 14, textAlign: 'center', color: colors.muted }}>
               No students yet. Tap "Add Student" to add your first one.
             </Text>
           </View>
@@ -106,6 +223,7 @@ export default function ClassDetail() {
             keyExtractor={(item) => item.id}
             renderItem={renderCard}
             showsVerticalScrollIndicator={false}
+            contentContainerStyle={{ paddingBottom: insets.bottom + 24 }}
           />
         )}
       </View>
@@ -116,6 +234,6 @@ export default function ClassDetail() {
         onSubmit={handleSubmit}
         student={editingStudent}
       />
-    </SafeAreaView>
+    </View>
   );
 }

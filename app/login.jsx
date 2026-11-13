@@ -50,7 +50,7 @@ export default function Login() {
             Attendance made simple for your classes
           </Text> */}
           <Image
-            source={require('../assets/logo.png')}
+            source={require('../assets/logo_withoutbg.png')}
             style={{
               width: 140,
               height: 140,

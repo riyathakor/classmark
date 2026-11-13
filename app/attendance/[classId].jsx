@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
-import { View, Text, SafeAreaView, FlatList, Pressable, Alert } from 'react-native';
+import { View, Text, FlatList, Pressable, Alert } from 'react-native';
 import { useLocalSearchParams, router, Stack } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useClasses } from '../../src/context/ClassContext';
@@ -8,13 +9,34 @@ import { useStudents } from '../../src/context/StudentContext';
 import { useAttendance } from '../../src/context/AttendanceContext';
 import Button from '../../src/components/Button';
 import { colors } from '../../src/theme/colors';
+import { cardStyle, CHIP } from '../../src/theme/ui';
 import { todayKey, formatDisplayDate, dateKeyToDateObj, toDateKey } from '../../src/utils/date';
+
+function StatusButton({ label, selected, selectedColor, onPress }) {
+    return (
+        <Pressable
+            onPress={onPress}
+            style={{
+                height: 34,
+                paddingHorizontal: 14,
+                borderRadius: 17,
+                justifyContent: 'center',
+                backgroundColor: selected ? selectedColor : 'rgba(107, 122, 144, 0.10)',
+            }}
+        >
+            <Text style={{ fontSize: 13, fontWeight: '700', color: selected ? '#FFFFFF' : colors.muted }}>
+                {label}
+            </Text>
+        </Pressable>
+    );
+}
 
 export default function MarkAttendance() {
     const { classId } = useLocalSearchParams();
     const { classes } = useClasses();
     const { getStudentsByClass } = useStudents();
     const { getRecordForClassDate, saveAttendance } = useAttendance();
+    const insets = useSafeAreaInsets();
 
     const classItem = classes.find((c) => c.id === classId);
     const students = getStudentsByClass(classId);
@@ -84,62 +106,133 @@ export default function MarkAttendance() {
     function renderStudent({ item }) {
         const status = statuses[item.id];
         return (
-            <View className="mb-3 flex-row items-center justify-between rounded-xl border border-border bg-card p-4">
-                <View className="flex-1 flex-row items-center gap-3">
-                    <View className="h-9 w-9 items-center justify-center rounded-full bg-surface">
-                        <Text className="text-xs font-semibold text-muted">{item.rollNumber}</Text>
+            <View
+                style={[
+                    cardStyle,
+                    {
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        padding: 14,
+                        marginBottom: 12,
+                    },
+                ]}
+            >
+                <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', paddingRight: 8 }}>
+                    <View
+                        style={{
+                            width: 34,
+                            height: 34,
+                            borderRadius: 17,
+                            backgroundColor: CHIP,
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            marginRight: 12,
+                        }}
+                    >
+                        <Text style={{ fontSize: 13, fontWeight: '700', color: colors.text }}>
+                            {item.rollNumber}
+                        </Text>
                     </View>
-                    <Text className="text-base font-medium text-text">{item.name}</Text>
+                    <Text
+                        numberOfLines={1}
+                        style={{ flex: 1, fontSize: 16, fontWeight: '600', color: colors.text }}
+                    >
+                        {item.name}
+                    </Text>
                 </View>
 
-                <View className="flex-row gap-2">
-                    <Pressable
+                <View style={{ flexDirection: 'row', gap: 8 }}>
+                    <StatusButton
+                        label="Present"
+                        selected={status === 'present'}
+                        selectedColor={colors.success}
                         onPress={() => setStatus(item.id, 'present')}
-                        className={`rounded-lg px-3 py-2 ${status === 'present' ? 'bg-success' : 'bg-surface border border-border'
-                            }`}
-                    >
-                        <Text className={status === 'present' ? 'text-xs font-semibold text-white' : 'text-xs text-muted'}>
-                            Present
-                        </Text>
-                    </Pressable>
-                    <Pressable
+                    />
+                    <StatusButton
+                        label="Absent"
+                        selected={status === 'absent'}
+                        selectedColor={colors.danger}
                         onPress={() => setStatus(item.id, 'absent')}
-                        className={`rounded-lg px-3 py-2 ${status === 'absent' ? 'bg-danger' : 'bg-surface border border-border'
-                            }`}
-                    >
-                        <Text className={status === 'absent' ? 'text-xs font-semibold text-white' : 'text-xs text-muted'}>
-                            Absent
-                        </Text>
-                    </Pressable>
+                    />
                 </View>
             </View>
         );
     }
 
     return (
-        <SafeAreaView className="flex-1 bg-surface">
+        <View style={{ flex: 1, backgroundColor: colors.surface }}>
             <Stack.Screen
                 options={{
                     headerShown: true,
                     title: classItem?.name || 'Mark Attendance',
+                    headerShadowVisible: false,
+                    headerStyle: { backgroundColor: colors.surface },
+                    headerTitleStyle: { fontSize: 18, fontWeight: '700', color: colors.text },
                     headerLeft: () => (
-                        <Pressable onPress={() => router.back()} hitSlop={8} className="mr-2">
-                            <Ionicons name="chevron-back" size={24} color={colors.text} />
+                        <Pressable
+                            onPress={() => router.back()}
+                            hitSlop={8}
+                            style={{
+                                width: 36,
+                                height: 36,
+                                borderRadius: 18,
+                                backgroundColor: CHIP,
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                marginRight: 8,
+                            }}
+                        >
+                            <Ionicons name="chevron-back" size={20} color={colors.text} />
                         </Pressable>
                     ),
                 }}
             />
 
-            <View className="flex-1 px-6 pt-4">
+            <View style={{ flex: 1, paddingHorizontal: 24, paddingTop: 12 }}>
+                {/* Date */}
                 <Pressable
                     onPress={() => setShowPicker(true)}
-                    className="mb-3 flex-row items-center justify-between rounded-xl border border-border bg-card p-4"
+                    style={[
+                        cardStyle,
+                        {
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            padding: 14,
+                            marginBottom: 12,
+                        },
+                    ]}
                 >
-                    <View className="flex-row items-center gap-2">
-                        <Ionicons name="calendar-outline" size={20} color={colors.primary} />
-                        <Text className="text-base font-medium text-text">{formatDisplayDate(dateKey)}</Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                        <View
+                            style={{
+                                width: 36,
+                                height: 36,
+                                borderRadius: 18,
+                                backgroundColor: CHIP,
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                marginRight: 12,
+                            }}
+                        >
+                            <Ionicons name="calendar" size={18} color={colors.text} />
+                        </View>
+                        <Text style={{ fontSize: 16, fontWeight: '600', color: colors.text }}>
+                            {formatDisplayDate(dateKey)}
+                        </Text>
                     </View>
-                    <Text className="text-sm text-primary">Change</Text>
+                    <View
+                        style={{
+                            height: 32,
+                            paddingHorizontal: 14,
+                            borderRadius: 16,
+                            backgroundColor: CHIP,
+                            justifyContent: 'center',
+                        }}
+                    >
+                        <Text style={{ fontSize: 13, fontWeight: '700', color: colors.text }}>Change</Text>
+                    </View>
                 </Pressable>
 
                 {showPicker ? (
@@ -153,20 +246,46 @@ export default function MarkAttendance() {
                 ) : null}
 
                 {isEditMode ? (
-                    <View className="mb-3 rounded-lg bg-primary/10 px-3 py-2">
-                        <Text className="text-xs text-primary">
+                    <View
+                        style={{
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            marginBottom: 12,
+                            paddingHorizontal: 14,
+                            paddingVertical: 10,
+                            borderRadius: 14,
+                            backgroundColor: CHIP,
+                        }}
+                    >
+                        <Ionicons name="create-outline" size={16} color={colors.text} />
+                        <Text style={{ flex: 1, marginLeft: 8, fontSize: 13, color: colors.text }}>
                             Attendance already submitted for this date — editing existing record.
                         </Text>
                     </View>
                 ) : null}
 
-                <View className="mb-3">
-                    <Button label="Mark All Present" onPress={markAllPresent} variant="secondary" size="sm" />
-                </View>
+                {/* Mark all present */}
+                <Pressable
+                    onPress={markAllPresent}
+                    style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        height: 42,
+                        borderRadius: 21,
+                        backgroundColor: CHIP,
+                        marginBottom: 14,
+                    }}
+                >
+                    <Ionicons name="checkmark-done" size={18} color={colors.text} />
+                    <Text style={{ marginLeft: 8, fontSize: 15, fontWeight: '700', color: colors.text }}>
+                        Mark All Present
+                    </Text>
+                </Pressable>
 
                 {students.length === 0 ? (
-                    <View className="mt-10 items-center">
-                        <Text className="text-center text-base text-muted">
+                    <View style={[cardStyle, { padding: 24, alignItems: 'center', marginTop: 8 }]}>
+                        <Text style={{ fontSize: 14, textAlign: 'center', color: colors.muted }}>
                             This class has no students yet. Add students from the Classes tab first.
                         </Text>
                     </View>
@@ -176,16 +295,38 @@ export default function MarkAttendance() {
                         keyExtractor={(item) => item.id}
                         renderItem={renderStudent}
                         showsVerticalScrollIndicator={false}
-                        contentContainerStyle={{ paddingBottom: 90 }}
+                        contentContainerStyle={{ paddingBottom: 120 }}
                     />
                 )}
             </View>
 
+            {/* Sticky submit bar */}
             {students.length > 0 ? (
-                <View className="absolute bottom-0 left-0 right-0 border-t border-border bg-surface px-6 pb-6 pt-3">
-                    <Button label={isEditMode ? 'Update Attendance' : 'Submit Attendance'} onPress={handleSubmit} />
+                <View
+                    style={{
+                        position: 'absolute',
+                        bottom: 0,
+                        left: 0,
+                        right: 0,
+                        backgroundColor: colors.card,
+                        borderTopLeftRadius: 24,
+                        borderTopRightRadius: 24,
+                        paddingHorizontal: 24,
+                        paddingTop: 14,
+                        paddingBottom: Math.max(insets.bottom, 16),
+                        shadowColor: colors.primary,
+                        shadowOpacity: 0.08,
+                        shadowRadius: 12,
+                        shadowOffset: { width: 0, height: -3 },
+                        elevation: 12,
+                    }}
+                >
+                    <Button
+                        label={isEditMode ? 'Update Attendance' : 'Submit Attendance'}
+                        onPress={handleSubmit}
+                    />
                 </View>
             ) : null}
-        </SafeAreaView>
+        </View>
     );
 }

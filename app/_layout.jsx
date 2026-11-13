@@ -11,6 +11,7 @@ import { StudentProvider } from '../src/context/StudentContext';
 import { AttendanceProvider } from '../src/context/AttendanceContext';
 import { PaymentProvider } from '../src/context/PaymentContext';
 import VideoSplash from '../src/components/VideoSplash';
+import { colors } from '../src/theme/colors';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -31,18 +32,33 @@ export default function RootLayout() {
         <StudentProvider>
           <AttendanceProvider>
             <PaymentProvider>
-              <View style={{ flex: 1 }}>
-                <StatusBar style="dark" />
+              <View
+                style={{
+                  flex: 1,
+                  backgroundColor: colors.surface,
+                }}
+              >
+                <StatusBar style="dark" backgroundColor={colors.surface} />
 
-                <Stack screenOptions={{ headerShown: false }}>
+                <Stack
+                  screenOptions={{
+                    headerShown: false,
+                    contentStyle: {
+                      backgroundColor: colors.surface,
+                    },
+                  }}
+                >
                   <Stack.Screen name="index" />
                   <Stack.Screen name="login" />
                   <Stack.Screen name="(tabs)" />
                   <Stack.Screen name="class/[id]" />
                   <Stack.Screen name="attendance/[classId]" />
+                  <Stack.Screen name="fees/[classId]" />
                 </Stack>
 
-                {showSplash && <VideoSplash onFinish={finishSplash} />}
+                {showSplash && (
+                  <VideoSplash onFinish={finishSplash} />
+                )}
               </View>
             </PaymentProvider>
           </AttendanceProvider>

@@ -6,7 +6,10 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { useClasses } from '../../src/context/ClassContext';
 import { useAttendance } from '../../src/context/AttendanceContext';
 import StatBar from '../../src/components/StatBar';
+import StatCard from '../../src/components/StatCard';
+import SectionTitle from '../../src/components/SectionTitle';
 import { colors } from '../../src/theme/colors';
+import { cardStyle, CHIP, screenTitleStyle, screenSubtitleStyle } from '../../src/theme/ui';
 import { todayKey, formatDisplayDate, dateKeyToDateObj, toDateKey } from '../../src/utils/date';
 
 export default function Reports() {
@@ -38,25 +41,61 @@ export default function Reports() {
 
   const markedClasses = classStats.filter((s) => s.marked);
   const overallPercent = markedClasses.length
-    ? Math.round(
-      markedClasses.reduce((sum, s) => sum + s.percent, 0) / markedClasses.length
-    )
+    ? Math.round(markedClasses.reduce((sum, s) => sum + s.percent, 0) / markedClasses.length)
     : null;
 
   return (
-    <SafeAreaView className="flex-1 bg-surface">
-      <ScrollView contentContainerStyle={{ padding: 24 }} showsVerticalScrollIndicator={false}>
-        <Text className="mb-4 text-2xl font-bold text-text">Reports</Text>
+    <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: colors.surface }}>
+      <ScrollView
+        contentContainerStyle={{ paddingHorizontal: 24, paddingTop: 36, paddingBottom: 24 }}
+        showsVerticalScrollIndicator={false}
+      >
+        <Text style={screenTitleStyle}>Reports</Text>
+        <Text style={screenSubtitleStyle}>Attendance by class and date</Text>
 
+        {/* Date filter */}
         <Pressable
           onPress={() => setShowPicker(true)}
-          className="mb-4 flex-row items-center justify-between rounded-xl border border-border bg-card p-4"
+          style={[
+            cardStyle,
+            {
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              padding: 14,
+              marginTop: 24,
+            },
+          ]}
         >
-          <View className="flex-row items-center gap-2">
-            <Ionicons name="calendar-outline" size={20} color={colors.primary} />
-            <Text className="text-base font-medium text-text">{formatDisplayDate(dateKey)}</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <View
+              style={{
+                width: 36,
+                height: 36,
+                borderRadius: 18,
+                backgroundColor: CHIP,
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginRight: 12,
+              }}
+            >
+              <Ionicons name="calendar" size={18} color={colors.text} />
+            </View>
+            <Text style={{ fontSize: 16, fontWeight: '600', color: colors.text }}>
+              {formatDisplayDate(dateKey)}
+            </Text>
           </View>
-          <Text className="text-sm text-primary">Change</Text>
+          <View
+            style={{
+              height: 32,
+              paddingHorizontal: 14,
+              borderRadius: 16,
+              backgroundColor: CHIP,
+              justifyContent: 'center',
+            }}
+          >
+            <Text style={{ fontSize: 13, fontWeight: '700', color: colors.text }}>Change</Text>
+          </View>
         </Pressable>
 
         {showPicker ? (
@@ -69,31 +108,35 @@ export default function Reports() {
           />
         ) : null}
 
-        <View className="mb-5 flex-row gap-3">
-          <View className="flex-1 rounded-xl border border-border bg-card p-4">
-            <Text className="text-2xl font-bold text-text">
-              {overallPercent == null ? '—' : `${overallPercent}%`}
-            </Text>
-            <Text className="mt-1 text-xs text-muted">Overall Attendance</Text>
-          </View>
-          <View className="flex-1 rounded-xl border border-border bg-card p-4">
-            <Text className="text-2xl font-bold text-text">
-              {markedClasses.length}/{activeClasses.length}
-            </Text>
-            <Text className="mt-1 text-xs text-muted">Classes Marked</Text>
-          </View>
+        {/* Summary for the selected date */}
+        <View style={{ flexDirection: 'row', gap: 14, marginTop: 14 }}>
+          <StatCard
+            value={overallPercent == null ? '—' : `${overallPercent}%`}
+            label="Overall Attendance"
+            icon="pie-chart"
+            iconColor={colors.text}
+            valueColor={colors.text}
+          />
+          <StatCard
+            value={`${markedClasses.length}/${activeClasses.length}`}
+            label="Classes Marked"
+            icon="checkmark-circle"
+            iconColor={colors.success}
+            valueColor={colors.text}
+          />
         </View>
 
-        <Text className="mb-3 text-lg font-bold text-text">Class-wise Attendance</Text>
+        {/* Class-wise bars */}
+        <SectionTitle>Class-wise Attendance</SectionTitle>
 
         {activeClasses.length === 0 ? (
-          <View className="items-center rounded-xl border border-border bg-card p-6">
-            <Text className="text-center text-sm text-muted">
+          <View style={[cardStyle, { padding: 24, alignItems: 'center' }]}>
+            <Text style={{ fontSize: 14, textAlign: 'center', color: colors.muted }}>
               No active classes yet. Add one from the Classes tab to get started.
             </Text>
           </View>
         ) : (
-          <View className="rounded-xl border border-border bg-card p-4">
+          <View style={[cardStyle, { padding: 18, paddingBottom: 6 }]}>
             {classStats.map(({ classItem, percent, present, total, marked }) => (
               <StatBar
                 key={classItem.id}
