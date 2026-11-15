@@ -6,17 +6,20 @@ import { Ionicons } from '@expo/vector-icons';
 import { useClasses } from '../../src/context/ClassContext';
 import { useStudents } from '../../src/context/StudentContext';
 import { usePayments } from '../../src/context/PaymentContext';
+import { useAttendance } from '../../src/context/AttendanceContext';
 import StudentFormModal from '../../src/components/StudentFormModal';
 import Button from '../../src/components/Button';
 import { colors } from '../../src/theme/colors';
 import { cardStyle, CHIP } from '../../src/theme/ui';
 import { formatMoney, getStudentFee, currentMonthKey } from '../../src/utils/fees';
+import { getSessionsUsed } from '../../src/utils/sessions';
 
 export default function ClassDetail() {
   const { id } = useLocalSearchParams();
   const { classes } = useClasses();
   const { getStudentsByClass, addStudent, updateStudent, removeStudent } = useStudents();
   const { getPayment } = usePayments();
+  const { records } = useAttendance();
   const insets = useSafeAreaInsets();
 
   const [modalVisible, setModalVisible] = useState(false);
@@ -36,11 +39,11 @@ export default function ClassDetail() {
     setModalVisible(true);
   }
 
-  async function handleSubmit(name, monthlyFee) {
+  async function handleSubmit(name, monthlyFee, totalSessions) {
     if (editingStudent) {
-      await updateStudent(editingStudent.id, name, monthlyFee);
+      await updateStudent(editingStudent.id, name, monthlyFee, totalSessions);
     } else {
-      await addStudent(id, name, monthlyFee);
+      await addStudent(id, name, monthlyFee, totalSessions);
     }
     setModalVisible(false);
   }
@@ -58,6 +61,8 @@ export default function ClassDetail() {
 
   function renderCard({ item }) {
     const paid = !!getPayment(item.id, month);
+    const used = getSessionsUsed(item.id, records);
+    const sessionsSet = item.totalSessions != null;
 
     return (
       <View
@@ -90,14 +95,22 @@ export default function ClassDetail() {
           </View>
 
           <View style={{ flex: 1 }}>
-            <Text
-              numberOfLines={1}
-              style={{ fontSize: 16, fontWeight: '700', color: colors.text }}
-            >
+            <Text numberOfLines={1} style={{ fontSize: 16, fontWeight: '700', color: colors.text }}>
               {item.name}
             </Text>
             <Text style={{ fontSize: 13, marginTop: 2, color: colors.muted }}>
               {formatMoney(getStudentFee(item))} / month
+            </Text>
+            <Text
+              style={{
+                fontSize: 13,
+                marginTop: 1,
+                color: sessionsSet ? colors.muted : colors.danger,
+              }}
+            >
+              {sessionsSet
+                ? `${used}/${item.totalSessions} sessions used`
+                : 'Total sessions not set'}
             </Text>
             <View
               style={{
@@ -233,6 +246,7 @@ export default function ClassDetail() {
         onClose={() => setModalVisible(false)}
         onSubmit={handleSubmit}
         student={editingStudent}
+        sessionsUsed={editingStudent ? getSessionsUsed(editingStudent.id, records) : 0}
       />
     </View>
   );

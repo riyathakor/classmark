@@ -10,6 +10,7 @@ import { useAttendance } from '../../src/context/AttendanceContext';
 import Button from '../../src/components/Button';
 import { colors } from '../../src/theme/colors';
 import { cardStyle, CHIP } from '../../src/theme/ui';
+import { getSessionInfo } from '../../src/utils/sessions';
 import { todayKey, formatDisplayDate, dateKeyToDateObj, toDateKey } from '../../src/utils/date';
 
 function StatusButton({ label, selected, selectedColor, onPress }) {
@@ -17,9 +18,10 @@ function StatusButton({ label, selected, selectedColor, onPress }) {
         <Pressable
             onPress={onPress}
             style={{
-                height: 34,
-                paddingHorizontal: 14,
-                borderRadius: 17,
+                flex: 1,
+                height: 36,
+                borderRadius: 18,
+                alignItems: 'center',
                 justifyContent: 'center',
                 backgroundColor: selected ? selectedColor : 'rgba(107, 122, 144, 0.10)',
             }}
@@ -35,7 +37,7 @@ export default function MarkAttendance() {
     const { classId } = useLocalSearchParams();
     const { classes } = useClasses();
     const { getStudentsByClass } = useStudents();
-    const { getRecordForClassDate, saveAttendance } = useAttendance();
+    const { records, getRecordForClassDate, saveAttendance } = useAttendance();
     const insets = useSafeAreaInsets();
 
     const classItem = classes.find((c) => c.id === classId);
@@ -43,14 +45,26 @@ export default function MarkAttendance() {
 
     const [dateKey, setDateKey] = useState(todayKey());
     const [showPicker, setShowPicker] = useState(false);
+    // statuses: { [studentId]: 'present' | 'absent' | 'none' }  ('none' = no session)
     const [statuses, setStatuses] = useState({});
 
     const existingRecord = getRecordForClassDate(classId, dateKey);
     const isEditMode = !!existingRecord;
 
+    // Session counts for this date. The date being edited is excluded, so
+    // editing a day never uses up extra sessions.
+    const info = {};
+    students.forEach((s) => {
+        info[s.id] = getSessionInfo(s, records, dateKey);
+    });
+
     useEffect(() => {
         if (existingRecord) {
+            // Students missing from a saved record had no session that day.
             const map = {};
+            students.forEach((s) => {
+                map[s.id] = 'none';
+            });
             existingRecord.records.forEach((r) => {
                 map[r.studentId] = r.status;
             });
@@ -72,53 +86,85 @@ export default function MarkAttendance() {
         setStatuses((prev) => ({ ...prev, [studentId]: status }));
     }
 
+    // Marks everyone who still has sessions as present. Students already set to
+    // "No session" and students at their limit are left alone.
     function markAllPresent() {
-        const map = {};
-        students.forEach((s) => {
-            map[s.id] = 'present';
+        setStatuses((prev) => {
+            const map = { ...prev };
+            students.forEach((s) => {
+                if (info[s.id].locked) return;
+                if (prev[s.id] === 'none') return;
+                map[s.id] = 'present';
+            });
+            return map;
         });
-        setStatuses(map);
+    }
+
+    // For a date when nobody in the class has a session.
+    function markAllNoSession() {
+        setStatuses((prev) => {
+            const map = { ...prev };
+            students.forEach((s) => {
+                if (info[s.id].locked) return;
+                map[s.id] = 'none';
+            });
+            return map;
+        });
     }
 
     async function handleSubmit() {
-        const unmarked = students.filter((s) => !statuses[s.id]);
+        const eligible = students.filter((s) => !info[s.id].locked);
+        const unmarked = eligible.filter((s) => !statuses[s.id]);
         if (unmarked.length > 0) {
             Alert.alert(
                 'Incomplete attendance',
-                `Please mark a status for all students. ${unmarked.length} student(s) unmarked.`
+                `Please choose Present, Absent or No session for every student. ${unmarked.length} student(s) unmarked.`
             );
             return;
         }
 
-        const studentStatuses = students.map((s) => ({
-            studentId: s.id,
-            status: statuses[s.id],
-        }));
+        const entries = eligible
+            .filter((s) => statuses[s.id] === 'present' || statuses[s.id] === 'absent')
+            .map((s) => ({ studentId: s.id, status: statuses[s.id] }));
 
-        await saveAttendance(classId, dateKey, studentStatuses);
+        // Keep what was already saved for students who are now at their session limit.
+        const preserved = existingRecord
+            ? existingRecord.records.filter((r) =>
+                students.some((s) => s.id === r.studentId && info[s.id].locked)
+            )
+            : [];
+
+        // An empty list is fine: it records that nobody had a session on this date.
+        const all = [...entries, ...preserved];
+
+        await saveAttendance(classId, dateKey, all);
         Alert.alert(
             'Saved',
-            isEditMode ? 'Attendance updated successfully.' : 'Attendance submitted successfully.',
+            all.length === 0
+                ? 'Recorded: no session for this class on this date.'
+                : isEditMode
+                    ? 'Attendance updated successfully.'
+                    : 'Attendance submitted successfully.',
             [{ text: 'OK', onPress: () => router.back() }]
         );
+
     }
 
     function renderStudent({ item }) {
+        const { used, total, remaining, locked } = info[item.id];
         const status = statuses[item.id];
+        const recorded = existingRecord?.records.find((r) => r.studentId === item.id)?.status;
+
+        let subtitle = 'No session limit set';
+        if (total != null) {
+            subtitle = locked
+                ? `${total}/${total} sessions used`
+                : `${used}/${total} sessions used · ${remaining} left`;
+        }
+
         return (
-            <View
-                style={[
-                    cardStyle,
-                    {
-                        flexDirection: 'row',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        padding: 14,
-                        marginBottom: 12,
-                    },
-                ]}
-            >
-                <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', paddingRight: 8 }}>
+            <View style={[cardStyle, { padding: 14, marginBottom: 12 }]}>
+                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                     <View
                         style={{
                             width: 34,
@@ -134,28 +180,66 @@ export default function MarkAttendance() {
                             {item.rollNumber}
                         </Text>
                     </View>
-                    <Text
-                        numberOfLines={1}
-                        style={{ flex: 1, fontSize: 16, fontWeight: '600', color: colors.text }}
-                    >
-                        {item.name}
-                    </Text>
+
+                    <View style={{ flex: 1 }}>
+                        <Text numberOfLines={1} style={{ fontSize: 16, fontWeight: '700', color: colors.text }}>
+                            {item.name}
+                        </Text>
+                        <Text
+                            style={{
+                                fontSize: 12,
+                                marginTop: 1,
+                                color: total != null && !locked && remaining <= 2 ? colors.danger : colors.muted,
+                            }}
+                        >
+                            {subtitle}
+                        </Text>
+                    </View>
+
+                    {locked ? (
+                        <View
+                            style={{
+                                paddingHorizontal: 10,
+                                paddingVertical: 4,
+                                borderRadius: 10,
+                                backgroundColor: 'rgba(107, 122, 144, 0.14)',
+                            }}
+                        >
+                            <Text style={{ fontSize: 11, fontWeight: '700', color: colors.muted }}>
+                                Sessions complete
+                            </Text>
+                        </View>
+                    ) : null}
                 </View>
 
-                <View style={{ flexDirection: 'row', gap: 8 }}>
-                    <StatusButton
-                        label="Present"
-                        selected={status === 'present'}
-                        selectedColor={colors.success}
-                        onPress={() => setStatus(item.id, 'present')}
-                    />
-                    <StatusButton
-                        label="Absent"
-                        selected={status === 'absent'}
-                        selectedColor={colors.danger}
-                        onPress={() => setStatus(item.id, 'absent')}
-                    />
-                </View>
+                {locked ? (
+                    recorded ? (
+                        <Text style={{ fontSize: 12, marginTop: 10, color: colors.muted }}>
+                            Recorded on this date: {recorded === 'present' ? 'Present' : 'Absent'}
+                        </Text>
+                    ) : null
+                ) : (
+                    <View style={{ flexDirection: 'row', gap: 8, marginTop: 12 }}>
+                        <StatusButton
+                            label="Present"
+                            selected={status === 'present'}
+                            selectedColor={colors.success}
+                            onPress={() => setStatus(item.id, 'present')}
+                        />
+                        <StatusButton
+                            label="Absent"
+                            selected={status === 'absent'}
+                            selectedColor={colors.danger}
+                            onPress={() => setStatus(item.id, 'absent')}
+                        />
+                        <StatusButton
+                            label="No session"
+                            selected={status === 'none'}
+                            selectedColor={colors.muted}
+                            onPress={() => setStatus(item.id, 'none')}
+                        />
+                    </View>
+                )}
             </View>
         );
     }
@@ -264,24 +348,44 @@ export default function MarkAttendance() {
                     </View>
                 ) : null}
 
-                {/* Mark all present */}
-                <Pressable
-                    onPress={markAllPresent}
-                    style={{
-                        flexDirection: 'row',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        height: 42,
-                        borderRadius: 21,
-                        backgroundColor: CHIP,
-                        marginBottom: 14,
-                    }}
-                >
-                    <Ionicons name="checkmark-done" size={18} color={colors.text} />
-                    <Text style={{ marginLeft: 8, fontSize: 15, fontWeight: '700', color: colors.text }}>
-                        Mark All Present
-                    </Text>
-                </Pressable>
+                {/* Quick actions */}
+                <View style={{ flexDirection: 'row', gap: 10, marginBottom: 14 }}>
+                    <Pressable
+                        onPress={markAllPresent}
+                        style={{
+                            flex: 1,
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            height: 42,
+                            borderRadius: 21,
+                            backgroundColor: CHIP,
+                        }}
+                    >
+                        <Ionicons name="checkmark-done" size={17} color={colors.text} />
+                        <Text style={{ marginLeft: 6, fontSize: 14, fontWeight: '700', color: colors.text }}>
+                            All Present
+                        </Text>
+                    </Pressable>
+
+                    <Pressable
+                        onPress={markAllNoSession}
+                        style={{
+                            flex: 1,
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            height: 42,
+                            borderRadius: 21,
+                            backgroundColor: 'rgba(107, 122, 144, 0.14)',
+                        }}
+                    >
+                        <Ionicons name="remove-circle-outline" size={17} color={colors.muted} />
+                        <Text style={{ marginLeft: 6, fontSize: 14, fontWeight: '700', color: colors.muted }}>
+                            All No Session
+                        </Text>
+                    </Pressable>
+                </View>
 
                 {students.length === 0 ? (
                     <View style={[cardStyle, { padding: 24, alignItems: 'center', marginTop: 8 }]}>

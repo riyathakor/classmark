@@ -116,7 +116,9 @@ export default function Home() {
             }}
           >
             {isSubmitted
-              ? `${presentCount}/${record.records.length} present`
+              ? record.records.length === 0
+                ? 'No session today'
+                : `${presentCount}/${record.records.length} present`
               : 'Not marked yet'}
           </Text>
         </View>

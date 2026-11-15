@@ -49,7 +49,9 @@ export default function Attendance() {
             }}
           >
             {isSubmitted
-              ? `${presentCount}/${record.records.length} present today`
+              ? record.records.length === 0
+                ? 'No session today'
+                : `${presentCount}/${record.records.length} present today`
               : 'Not marked today'}
           </Text>
         </View>

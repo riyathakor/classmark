@@ -29,16 +29,15 @@ export function StudentProvider({ children }) {
     refresh();
   }, []);
 
-  async function addStudent(classId, name, monthlyFee) {
-    await studentStorage.addStudent(classId, name, monthlyFee);
+  async function addStudent(classId, name, monthlyFee, totalSessions) {
+    await studentStorage.addStudent(classId, name, monthlyFee, totalSessions);
     await refresh();
   }
 
-  async function updateStudent(id, name, monthlyFee) {
-    await studentStorage.updateStudent(id, name, monthlyFee);
+  async function updateStudent(id, name, monthlyFee, totalSessions) {
+    await studentStorage.updateStudent(id, name, monthlyFee, totalSessions);
     await refresh();
   }
-
   async function removeStudent(id) {
     await studentStorage.removeStudent(id);
     await refresh();

@@ -4,17 +4,24 @@ import Input from './Input';
 import Button from './Button';
 import { getStudentFee } from '../utils/fees';
 
-export default function StudentFormModal({ visible, onClose, onSubmit, student = null }) {
+export default function StudentFormModal({
+  visible,
+  onClose,
+  onSubmit,
+  student = null,
+  sessionsUsed = 0,
+}) {
   const [name, setName] = useState('');
   const [fee, setFee] = useState('');
+  const [sessions, setSessions] = useState('');
   const [errors, setErrors] = useState({});
 
   useEffect(() => {
     if (visible) {
       setName(student?.name || '');
-      // Students saved before fees existed show an empty field until a fee is entered.
       const existingFee = student ? getStudentFee(student) : 0;
       setFee(student && existingFee > 0 ? String(existingFee) : '');
+      setSessions(student?.totalSessions != null ? String(student.totalSessions) : '');
       setErrors({});
     }
   }, [visible, student]);
@@ -28,11 +35,18 @@ export default function StudentFormModal({ visible, onClose, onSubmit, student =
       next.fee = 'Enter a valid monthly fee';
     }
 
+    const sessionsNumber = Number(sessions);
+    if (sessions.trim() === '' || !Number.isInteger(sessionsNumber) || sessionsNumber < 1) {
+      next.sessions = 'Enter a whole number of sessions (1 or more)';
+    } else if (sessionsNumber < sessionsUsed) {
+      next.sessions = `Can't be less than the ${sessionsUsed} sessions already used`;
+    }
+
     if (Object.keys(next).length > 0) {
       setErrors(next);
       return;
     }
-    onSubmit(name.trim(), feeNumber);
+    onSubmit(name.trim(), feeNumber, sessionsNumber);
   }
 
   const isEditMode = !!student;
@@ -49,7 +63,9 @@ export default function StudentFormModal({ visible, onClose, onSubmit, student =
           </Text>
 
           {isEditMode ? (
-            <Text className="mb-3 text-sm text-muted">Roll No. {student.rollNumber}</Text>
+            <Text className="mb-3 text-sm text-muted">
+              Roll No. {student.rollNumber} · {sessionsUsed} sessions used so far
+            </Text>
           ) : null}
 
           <Input
@@ -67,6 +83,15 @@ export default function StudentFormModal({ visible, onClose, onSubmit, student =
             placeholder="e.g. 1500"
             keyboardType="numeric"
             error={errors.fee}
+          />
+
+          <Input
+            label="Total sessions"
+            value={sessions}
+            onChangeText={setSessions}
+            placeholder="e.g. 14"
+            keyboardType="numeric"
+            error={errors.sessions}
           />
 
           <View className="mt-2 flex-row gap-3">
